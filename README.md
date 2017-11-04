@@ -14,3 +14,5 @@
 ```fish
 $ omf install https://github.com/PeterCP/fishercp
 ```
+
+[omf-link]: https://www.github.com/oh-my-fish/oh-my-fish
