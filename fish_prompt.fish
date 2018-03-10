@@ -23,8 +23,8 @@ set __fish_git_prompt_char_untrackedfiles '☡'
 # set __fish_git_prompt_char_untrackedfiles '…'
 # set __fish_git_prompt_char_dirtystate '⚡'
 
-set theme_prompt_char '=>'
-set theme_prompt_color 'black'
+set theme_prompt_char '$'
+set theme_prompt_color 'normal'
 
 # Display the state of the branch when inside of a git repo
 # function __theme_prompt_parse_git_branch_state -d "Display the state of the branch"
@@ -108,13 +108,15 @@ function __theme_prompt_get_path -a color -d "Get PWD"
     set_color normal
 end
 
-function __theme_prompt_get_extras -a rust_color -a python_color -d "Cargo and virtualenv displays"
+function __theme_prompt_get_rust -a color -d "Get Rust info if available"
     if test -e "Cargo.toml"
-        printf " (rust:%s)" (set_color $rust_color)(rustup show | tail -n 2 | head -n 1 |  cut -d '-' -f 1)(set_color normal)
+        printf " (rust:%s)" (set_color $color)(rustup show | tail -n 2 | head -n 1 |  cut -d '-' -f 1)(set_color normal)
     end
+end
 
+function __theme_prompt_get_virtualenv -a color -d "Get Virtualenv info if available"
     if test $VIRTUAL_ENV
-        printf " (python:%s)" (set_color $python_color)(basename $VIRTUAL_ENV)(set_color normal)
+        printf " (python:%s)" (set_color $color)(basename $VIRTUAL_ENV)(set_color normal)
     end
 end
 
@@ -125,47 +127,49 @@ function __theme_prompt_left_side -d "Get left side of prompt"
     set -l p (__theme_prompt_get_path "cyan") # Path
     # set -l g (__theme_prompt_git "purple" "blue") # Git
     set -l g (__fish_git_prompt) # Git
-    set -l e (__theme_prompt_get_extras "red" "blue") # Virtualenv and Rust
+    set -l r (__theme_prompt_get_rust "red") # Rust
+    set -l v (__theme_prompt_get_virtualenv "blue") # Virtualenv
 
-    printf '%s@%s:%s%s%s' $u $h $p $g $e # Format prompt
+    printf '%s@%s:%s%s%s%s%s%s' $u $h $p $g $r $v # Format prompt
 end
 
 # Get right side of prompt
-function __theme_prompt_right_side -d "Get right side of prompt"
-    set -l code $status
-    if test $code -ne 0
-        set_color -o red
-    else
-        set_color green
-    end
-    printf '%d' $code
-    set_color black
-    printf '|'
-    set_color -o black
-    printf '%s' (date +%H:%M:%S)
-    set_color normal
-end
+# function __theme_prompt_right_side -d "Get right side of prompt"
+#     set -l code $status
+#     if test $code -ne 0
+#         set_color -o red
+#     else
+#         set_color green
+#     end
+#     printf '%d' $code
+#     set_color black
+#     printf '|'
+#     set_color -o black
+#     printf '%s' (date +%H:%M:%S)
+#     set_color normal
+# end
 
-function get_padding -a length -d "Get padding of given length"
-    set -l space ""
-    for i in (seq 1 $length)
-        set space " "$space
-    end
-    printf $space
-end
+# function get_padding -a length -d "Get padding of given length"
+#     set -l space ""
+#     for i in (seq 1 $length)
+#         set space " "$space
+#     end
+#     printf $space
+# end
 
-function remove_color -a str -d "Remove color info from a string"
-    printf $str | perl -pe 's/\x1b.*?[mGKH]//g'
-end
+# function remove_color -a str -d "Remove color info from a string"
+#     printf $str | perl -pe 's/\x1b.*?[mGKH]//g'
+# end
 
-function format_output -a length -a left -a right -d "Format output string"
-    set -l padding (get_padding (math $length - (remove_color "$left$right" | string length)))
-    echo -n "$left$padding$right"
-end
+# function format_output -a length -a left -a right -d "Format output string"
+#     set -l padding (get_padding (math $length - (remove_color "$left$right" | string length)))
+#     echo -n "$left$padding$right"
+# end
 
 function fish_prompt
-    set -l right (__theme_prompt_right_side)
+    set -l prompt (set_color -o $theme_prompt_color)(echo "$theme_prompt_char")(set_color normal)
+    # set -l right (__theme_prompt_right_side)
     set -l left (__theme_prompt_left_side)
-    format_output $COLUMNS $left $right
-    printf "\n%s " (set_color -o $theme_prompt_color)(echo "$theme_prompt_char")(set_color normal)
+    # format_output $COLUMNS $left $right
+    printf "%s\n%s " $left $prompt
 end
